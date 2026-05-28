@@ -1,0 +1,318 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{geometry}
+
+\geometry{margin=2.5cm}
+
+\title{IoT Homework -- Exercise 1}
+\author{Angelica Ortiz 11191225, Daniel Nägele 11180610}
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+\tableofcontents
+\newpage
+
+\section{Probability Mass Function}
+
+The number of vibration peaks detected in each 10-second window follows a Poisson distribution with parameter:
+
+\[
+\lambda = 0.4
+\]
+
+The probability mass function of a Poisson random variable is:
+
+\[
+P(k)=\frac{\lambda^k e^{-\lambda}}{k!}
+\]
+
+Therefore:
+
+\[
+P(r=r_0)=P(k=0)=e^{-0.4}=0.6703
+\]
+
+\[
+P(r=r_1)=P(k=1)=0.4e^{-0.4}=0.2681
+\]
+
+\[
+P(r=r_2)=P(k>1)
+\]
+
+\[
+P(r=r_2)=1-P(k=0)-P(k=1)
+\]
+
+\[
+P(r=r_2)=1-0.6703-0.2681=0.0616
+\]
+
+Thus, the PMF is:
+
+\[
+P(r=r_0)=0.6703
+\]
+
+\[
+P(r=r_1)=0.2681
+\]
+
+\[
+P(r=r_2)=0.0616
+\]
+
+\section{CFP Slot Assignment}
+
+The system operates in beacon-enabled mode using CFP only.
+
+Given:
+
+\[
+R = 250\ kbps
+\]
+
+\[
+L = 128\ bytes
+\]
+
+The CFP is dimensioned according to the worst-case traffic scenario.
+
+The maximum generated payload is:
+
+\[
+4KB = 4000B
+\]
+
+Since each packet has size:
+
+\[
+128B
+\]
+
+the number of packets required for one node is:
+
+\[
+N_{\text{slots,node}}
+=
+\left\lceil
+\frac{4000}{128}
+\right\rceil
+\]
+
+\[
+N_{\text{slots,node}}
+=
+\left\lceil
+31.25
+\right\rceil
+=
+32
+\]
+
+Since one packet fits exactly in one CFP slot:
+
+\[
+32\ slots/node
+\]
+
+The monitoring system contains 3 vibration monitoring nodes, therefore:
+
+\[
+N_{slots}=3\cdot32
+\]
+
+\[
+N_{slots}=96\ slots
+\]
+
+Thus, the CFP slot assignment is:
+
+\[
+32\ slots/node
+\]
+
+and the total number of CFP slots is:
+
+\[
+N_{slots}=96
+\]
+
+\section{Slot Duration}
+
+The slot duration is:
+
+\[
+T_s=\frac{L\cdot8}{R}
+\]
+
+\[
+T_s=\frac{128\cdot8}{250000}
+\]
+
+\[
+T_s=0.004096s
+\]
+
+\[
+T_s=4.096ms
+\]
+
+\section{Active and Inactive Time}
+
+The active time includes:
+
+\begin{itemize}
+    \item the beacon slot;
+    \item the CFP slots.
+\end{itemize}
+
+Therefore:
+
+\[
+N_{\text{active slots}}=96+1=97
+\]
+
+The active time is:
+
+\[
+T_{active}=97\cdot4.096ms
+\]
+
+\[
+T_{active}=397.312ms
+\]
+
+\[
+T_{active}=397.31ms
+\]
+
+The reporting period is:
+
+\[
+T=10s=10000ms
+\]
+
+Therefore:
+
+\[
+T_{inactive}=10000-397.312
+\]
+
+\[
+T_{inactive}=9602.688ms
+\]
+
+\[
+T_{inactive}=9602.69ms
+\]
+
+\section{Duty Cycle}
+
+The duty cycle is computed as:
+
+\[
+DC=\frac{T_{active}}{T}
+\]
+
+\[
+DC=\frac{397.312}{10000}
+\]
+
+\[
+DC=0.0397312
+\]
+
+\[
+DC=3.97312\%
+\]
+
+\[
+DC=3.97\%
+\]
+
+\section{Additional Nodes}
+
+The maximum allowed duty cycle is:
+
+\[
+DC_{max}=10\%
+\]
+
+Thus, the maximum active time is:
+
+\[
+T_{active,max}=0.1\cdot10000
+\]
+
+\[
+T_{active,max}=1000ms
+\]
+
+Each node requires:
+
+\[
+32\ slots
+\]
+
+Including the beacon slot, the active time becomes:
+
+\[
+T_{active}=(1+32M)T_s
+\]
+
+where \(M\) is the number of vibration monitoring nodes.
+
+Imposing the duty-cycle constraint:
+
+\[
+(1+32M)\cdot4.096 < 1000
+\]
+
+\[
+1+32M < \frac{1000}{4.096}
+\]
+
+\[
+1+32M < 244.14
+\]
+
+\[
+32M < 243.14
+\]
+
+\[
+M < 7.59
+\]
+
+Therefore, the maximum integer number of nodes is:
+
+\[
+M_{max}=7
+\]
+
+The system already contains 3 nodes, therefore:
+
+\[
+\Delta M = 7-3
+\]
+
+\[
+\Delta M = 4
+\]
+
+Hence, 4 additional vibration monitoring nodes can be added while keeping the duty cycle below 10\%.
+
+\[
+\Delta M = 4\ additional\ nodes
+\]
+
+\end{document}
