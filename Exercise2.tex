@@ -14,7 +14,7 @@
 
 \geometry{margin=2.5cm}
 
-\sisetup{exponent-product = \cdot, output-product = \cdot}
+\sisetup{exponent-product = \cdot, output-product = \cdot, inter-unit-product = {}}
 \lstset{
     breaklines=true,
     breakatwhitespace=true,
@@ -33,7 +33,7 @@
 
 \tableofcontents
 \newpage
-\section{Probability Mass Function}
+\section{BLE Localization}
 \subsection{Logic}
 The assumed main use case for the localization of these dentures is the loss and the prevention of loss of said dentures. It makes no sense to use them to localize patients, as not all patients are wearing dentures in general, dentures are not worn at all times, and the fact that the human body will absorb signals. Especially the \SI{2.4}{\giga\hertz} band used by BLE resonates heavily with water molecules and thus the human body. This will lead to absorption, scattering and reflection, and result in severe skewing of RSSI measurements.\\
 This leads us to consider the following three scenarios:
@@ -57,8 +57,8 @@ To detect our scenarios of interest, we need two additional sensors.
 \end{itemize}
 
 \subsection{Pseudocode}
-
-\begin{lstlisting}
+Listing \ref{lst:code} shows the pseudocode for the improved firmware.
+\begin{lstlisting}[label=lst:code, caption=Firmware Pseudocode]
 resting_transmits = 0
 
 setup() {
@@ -73,8 +73,10 @@ loop() {
   if temperature > 34.0:
     resting_transmits = 0
     disable_ble_beacons()
-    ignore_interrupts(Wake_on_Motion_Interrupt) // while in-mouth, ignore unnecessary interrupt-based wakeups
-    sleep(5 minutes) // acts as return statement, no further code is executed
+    // while in-mouth, ignore unnecessary interrupt-based wakeups. If the MCUs power draw for processing motion interrupts is negligible, this can be removed
+    ignore_interrupts(Wake_on_Motion_Interrupt)
+    // acts as return statement, no further code is executed
+    sleep(5 minutes)
 
   enable_interrupts(Wake_on_Motion_Interrupt)
   if motion_detected:
@@ -87,13 +89,54 @@ loop() {
   if resting_transmits is 5:
     disable_ble_beacons()
     resting_transmits = 0
-    sleep(1 day) // no need to wake up before motion is detected, only 1 day as a fail-safe
+    // no need to wake up before motion is detected, only 1 day sleep as a fail-safe
+    sleep(1 day)
   else:
     enable_ble_beacons()
-    set_ble_beacon_frequency(1/60 Hz) // transmit beacon every minute
+    // transmit beacon every minute for five minutes
+    set_ble_beacon_frequency(1/60 Hz)
     resting_transmits = resting_transmits + 1
     sleep(1 minute)
 }
-
 \end{lstlisting}
+
+\subsection{Hardware}
+The hardware for these dentures must fit inside a dental prosthesis and consume very little power. Thus, the following components were selected.
+\vspace{5pt}
+
+\noindent\textbf{Nordic Semiconductor nRF52810:} This ultra-low power MCU has integrated BLE support and with \qtyproduct{2.482 x 2.464}{\milli\metre} a very small package footprint. Additionally, a temperature is already present inside, eliminating the need for an external temperature sensor. Obviously the temperature readings need to be calibrated, due to the dentures surrounding resin and the chip's heat itself.
+
+\vspace{5pt}
+
+\noindent\textbf{STMicroelectronics LIS2DW12:} This accelerometer draws under \SI{1}{\micro\ampere} in active low-power mode. With its similar small package footprint, interrupt support and an integrated temperature sensor, it is the perfect fit for this application.
+
+\subsection{Energy Savings}
+We assume, that using the RF module and thus the beacon transmission draw the majority of power and that the MCU's and sensor's power draw is negligible. \\
+Original implementation:
+\begin{align}
+
+	\qty{1}{\day} = 24 \cdot{} 60 \cdot{} \SI{60}{\second} & = \SI{86400}{\second} \notag \\
+	\SI{86400}{\second} \cdot{} \SI{0.1}{\hertz}           & = 8640 \text{ beacons}
+
+\end{align}
+
+For our implementation, we assume the following usage characteristics over a single day:
+
+\begin{itemize}
+	\item In-Mouth: \qty{16}{\hour}
+	\item Outside Mouth Moving: \qty{10}{\minute}
+	\item Outside Mouth Resting: \qty{7}{\hour}\qty{50}{\minute}
+\end{itemize}
+Improved implementation:
+\begin{align}
+	n_{mouth}                                           & = 0             \notag \\
+	n_{resting}                                         & = 5           \notag   \\
+	n_{moving} = \qty{10}{\minute} \cdot \SI{1}{\hertz} & = 600          \notag  \\
+	n_{total} = n_{mouth} + n_{resting} + n_{moving}    & = 605 \text{ beacons}
+\end{align}
+This results in the following energy savings:
+\[
+	605 \div 8640 = 0.07
+\]
+Despite our aggressive beacon transmission during movement, we transmit 7\% of the original beacon count and thus only use 7\% of the original power draw.
 \end{document}
