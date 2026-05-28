@@ -14,6 +14,7 @@
 
 \geometry{margin=2.5cm}
 
+\DeclareSIUnit[qualifier-mode = combine]{\beacon}{beacons}
 \sisetup{exponent-product = \cdot, output-product = \cdot, inter-unit-product = {}}
 \lstset{
     breaklines=true,
@@ -39,7 +40,7 @@ The assumed main use case for the localization of these dentures is the loss and
 This leads us to consider the following three scenarios:
 \vspace{5pt}
 
-\noindent\textbf{In-Mouth:} While the denture is worn, we want to put the device to deep sleep and not transmit any beacon signals. Only a signal telling the system that the denture is worn would be useful.
+\noindent\textbf{In-Mouth:} While the denture is worn, we want to put the device to deep sleep and not transmit any beacon signals. Only a signal telling the system that the denture is worn would be useful, but not necessary.
 
 \vspace{5pt}
 
@@ -47,7 +48,7 @@ This leads us to consider the following three scenarios:
 
 \vspace{5pt}
 
-\noindent\textbf{Out of Mouth, Moving:} If the denture is not worn but still moving, the beacons need to be emitted continuously and often. Such a case would be if the denture is accidentally swept into laundry or the trash and the loss of device needs to be prevented. Geo-fencing could be implemented in the sensing side of the system to also automatically alert caregivers.
+\noindent\textbf{Out of Mouth, Moving:} If the denture is not worn but still moving, the beacons need to be emitted continuously and often. Such a case would be if the denture is accidentally swept into laundry or the trash and the loss of the prosthesis needs to be prevented. Geo-fencing could be implemented in the sensing side of the system to also automatically alert caregivers.
 
 \subsection{Sensing}
 To detect our scenarios of interest, we need two additional sensors.
@@ -86,7 +87,7 @@ loop() {
     sleep(1 second)
 
   // we have transmitted our beacon 5 times and will not emit any further beacons until movement is detected
-  if resting_transmits is 5:
+  if resting_transmits > 4:
     disable_ble_beacons()
     resting_transmits = 0
     // no need to wake up before motion is detected, only 1 day sleep as a fail-safe
@@ -108,16 +109,14 @@ The hardware for these dentures must fit inside a dental prosthesis and consume 
 
 \vspace{5pt}
 
-\noindent\textbf{STMicroelectronics LIS2DW12:} This accelerometer draws under \SI{1}{\micro\ampere} in active low-power mode. With its similar small package footprint, interrupt support and an integrated temperature sensor, it is the perfect fit for this application.
+\noindent\textbf{STMicroelectronics LIS2DW12:} This accelerometer draws under \SI{1}{\micro\ampere} in active low-power mode. With its similar small package footprint, interrupt support and an integrated temperature sensor, it is the perfect fit for this application. The additional temperature sensor can be used to refine measurements.
 
 \subsection{Energy Savings}
 We assume, that using the RF module and thus the beacon transmission draw the majority of power and that the MCU's and sensor's power draw is negligible. \\
 Original implementation:
 \begin{align}
-
 	\qty{1}{\day} = 24 \cdot{} 60 \cdot{} \SI{60}{\second} & = \SI{86400}{\second} \notag \\
-	\SI{86400}{\second} \cdot{} \SI{0.1}{\hertz}           & = 8640 \text{ beacons}
-
+	\SI{86400}{\second} \cdot{} \SI{0.1}{\hertz}           & = \SI{8640}{\beacon}
 \end{align}
 
 For our implementation, we assume the following usage characteristics over a single day:
@@ -129,14 +128,15 @@ For our implementation, we assume the following usage characteristics over a sin
 \end{itemize}
 Improved implementation:
 \begin{align}
-	n_{mouth}                                           & = 0             \notag \\
-	n_{resting}                                         & = 5           \notag   \\
-	n_{moving} = \qty{10}{\minute} \cdot \SI{1}{\hertz} & = 600          \notag  \\
-	n_{total} = n_{mouth} + n_{resting} + n_{moving}    & = 605 \text{ beacons}
+	n_{mouth}                                           & = \SI{0}{\beacon}             \notag \\
+	n_{resting}                                         & = \SI{5}{\beacon}           \notag   \\
+	n_{moving} = \qty{10}{\minute} \cdot \SI{1}{\hertz} & = \SI{600}{\beacon}          \notag  \\
+	n_{total} = n_{mouth} + n_{resting} + n_{moving}    & = \SI{605}{\beacon}
 \end{align}
 This results in the following energy savings:
-\[
-	605 \div 8640 = 0.07
-\]
+\begin{align}
+	605 \div 8640 \approx 0.07 & = 7\%
+\end{align}
+
 Despite our aggressive beacon transmission during movement, we transmit 7\% of the original beacon count and thus only use 7\% of the original power draw.
 \end{document}
