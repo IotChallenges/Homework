@@ -1,0 +1,13 @@
+.idea/
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.pdf
+mosquitto.db
+#challenge/data/id_log.csv
+#challenge/data/filtered_elems.csv
+#challenge/data/outgoing_cost.csv
