@@ -8,7 +8,7 @@
 \usepackage{float}
 \usepackage{siunitx}
 \usepackage{listings}
-\usepackage{hyperref}
+\usepackage[hidelinks]{hyperref}
 \usepackage{booktabs}
 \usepackage{amsfonts}
 
@@ -32,8 +32,6 @@
 \thispagestyle{empty}
 \newpage
 
-\tableofcontents
-\newpage
 \section{BLE Localization}
 \subsection{Logic}
 The assumed main use case for the localization of these dentures is the loss and the prevention of loss of said dentures. It makes no sense to use them to localize patients, as not all patients are wearing dentures in general, dentures are not worn at all times, and the fact that the human body will absorb signals. Especially the \SI{2.4}{\giga\hertz} band used by BLE resonates heavily with water molecules and thus the human body. This will lead to absorption, scattering and reflection, and result in severe skewing of RSSI measurements.\\
@@ -53,7 +51,7 @@ This leads us to consider the following three scenarios:
 \subsection{Sensing}
 To detect our scenarios of interest, we need two additional sensors.
 \begin{itemize}
-	\item Temperature Sensor: Used to detect if the denture is inside the mouth by measuring the body's heat (e.g. temperature t \textgreater{} \SI{34}{\degreeCelsius})
+	\item Temperature Sensor: Used to detect if the denture is inside the mouth by measuring the body's heat (e.g. temperature t \textgreater{} \SI{35}{\degreeCelsius})
 	\item Acceleration Sensor: Used to detect motion if the denture is outside the mouth.
 \end{itemize}
 
@@ -71,15 +69,12 @@ loop() {
   temperature = read_temperature()
   motion_detected = read_last_motion_state()
 
-  if temperature > 34.0:
+  if temperature > 35.0:
     resting_transmits = 0
     disable_ble_beacons()
-    // while in-mouth, ignore unnecessary interrupt-based wakeups. If the MCUs power draw for processing motion interrupts is negligible, this can be removed
-    ignore_interrupts(Wake_on_Motion_Interrupt)
     // acts as return statement, no further code is executed
     sleep(5 minutes)
 
-  enable_interrupts(Wake_on_Motion_Interrupt)
   if motion_detected:
     resting_transmits = 0
     enable_ble_beacons()
